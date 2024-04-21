@@ -20,9 +20,10 @@ public class LMS {
             }
             Statement st = con.createStatement();
             LibraryDatabase libraryDatabase = new LibraryDatabase();
+            Librarian librarian = new Librarian();
 
             Scanner scanner = new Scanner(System.in);
-            
+
             int choice;
             do {
                 System.out.println("\nLibrary Management System");
@@ -30,7 +31,9 @@ public class LMS {
                 System.out.println("2. Search for a book");
                 System.out.println("3. Borrow a book");
                 System.out.println("4. Add a book");
-                System.out.println("5. Exit");
+                System.out.println("5. Display students");
+                System.out.println("6. Display transactions");
+                System.out.println("7. Exit");
                 System.out.print("Enter your choice: ");
                 choice = scanner.nextInt();
                 scanner.nextLine(); // Consume newline character
@@ -53,13 +56,19 @@ public class LMS {
                         break;
                     case 4:
                         libraryDatabase.addBook(st);
+                        break;
                     case 5:
+                        librarian.displayStudents(con, st);
+                        break;
+                    case 6:
+                        librarian.displayTransaction(con, st);
+                    case 7:
                         System.out.println("Exiting...");
                         break;
                     default:
                         System.out.println("Invalid choice. Please try again.");
                 }
-            } while (choice != 5);
+            } while (choice != 7);
             scanner.close();
         } catch (SQLException e) {
             System.out.println(e);
