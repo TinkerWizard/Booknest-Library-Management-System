@@ -1,8 +1,5 @@
 package lms;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 public class User {
     private String name;
     private long id;

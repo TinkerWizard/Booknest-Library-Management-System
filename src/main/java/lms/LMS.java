@@ -28,6 +28,7 @@ public class LMS {
             Librarian librarian = new Librarian();
             Account account = new Account();
             String currentUsername = account.starter(con);
+            // String currentUserId =
             System.out.println("The current username is: " + currentUsername);
             String query = "SELECT user_type FROM \"User\" WHERE username = '" + currentUsername + "'";
             st.executeQuery(query);
@@ -84,13 +85,14 @@ public class LMS {
                     System.out.println("1. Borrow a book");
                     System.out.println("2. Return a book");
                     System.out.println("6. Exit");
-                    choice = reader.read();
-                    reader.readLine(); // Consume newline character
+                    System.out.print("Enter your choice: ");
+                    String choiceStr = reader.readLine();
+                    choice = Integer.parseInt(choiceStr);
                     switch (choice) {
                         case 1:
                             System.out.print("Enter title or author to borrow: ");
                             String borrowKeyword = reader.readLine();
-                            libraryDatabase.borrowBooks(borrowKeyword);
+                            libraryDatabase.borrowBooks(borrowKeyword, con, currentUsername);
                             break;
                         case 2:
                             System.out.println("Enter the book id to return");

@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class LibraryDatabase {
@@ -18,7 +22,7 @@ public class LibraryDatabase {
 
     public LibraryDatabase() {
         // this.books = new ArrayList<>();
-        input=new BufferedReader(new InputStreamReader(System.in));
+        input = new BufferedReader(new InputStreamReader(System.in));
     }
 
     public void addBook(Connection connection, Statement statement) throws IOException {
@@ -40,9 +44,7 @@ public class LibraryDatabase {
                 if (rs.next()) {
                     System.out.println("Book with the entered ISBN already exists in the database");
                     System.out.println("Book title" + rs.getString("title"));
-                }
-                else
-                {
+                } else {
                     uniqueISBN = true;
                 }
             } while (uniqueISBN == false);
@@ -76,7 +78,7 @@ public class LibraryDatabase {
                 String[] authors = (String[]) authorArray.getArray();
                 String isbn = resultSet.getString("isbn");
                 int year = resultSet.getInt("year");
-    
+
                 System.out.println("Book ID: " + bookId);
                 System.out.println("Title: " + title);
                 System.out.print("Author(s): ");
@@ -94,16 +96,19 @@ public class LibraryDatabase {
     }
 
     public void searchBook(String keyword, Connection connection) {
-        // boolean found = false;
         try {
             Statement statement = connection.createStatement();
-            String query = "SELECT title, author FROM book WHERE title LIKE '%" + keyword + "%'";
+            String query = "SELECT * FROM book WHERE title LIKE '%" + keyword + "%'";
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
+                int bookId = resultSet.getInt("book_id");
                 String title = resultSet.getString("title");
                 String author = resultSet.getString("author");
+                int year = resultSet.getInt("year");
+                System.out.println("Book id: " + bookId);
                 System.out.println("Title: " + title);
                 System.out.println("Author(s): " + author);
+                System.out.println("Year: " + year);
                 System.out.println();
             }
         } catch (SQLException e) {
@@ -111,28 +116,47 @@ public class LibraryDatabase {
         }
     }
 
-    public void borrowBooks(String keyword) throws IOException {
-        ArrayList<Book> borrowBooksSearchResults = new ArrayList<>();
-        boolean found = false;
-        int i = 1;
-        for (Book book : books) {
-            if (book.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
-                    book.getAuthor().toLowerCase().contains(keyword.toLowerCase())) {
-                System.out.println(i + ". " + book);
-                i++;
-                borrowBooksSearchResults.add(book);
-                found = true;
+    public void borrowBooks(String keyword, Connection connection, String username) throws IOException {
+        searchBook(keyword, connection);
+        System.out.println("Enter the book id of the book you would like to borrow: ");
+        String bookIdString = input.readLine();
+        int bookId = Integer.parseInt(bookIdString);
+        // System.out.println("The username");
+        int user_id = getUserId(username, connection);// dummy initial value
+        
+        String transactionType = "Borrow";
+        // feteching the current and date. Then converting it to a string
+        Date transactionDate = new Date(System.currentTimeMillis());
+        String updateQuery = "INSERT INTO \"transaction\" (book_id, user_id, transaction_type, transaction_date) VALUES (?, ?, ?, ?)";
+        try {
+            PreparedStatement pst = connection.prepareStatement(updateQuery);
+            pst.setInt(1, bookId);
+            pst.setInt(2, user_id);
+            pst.setString(3, transactionType);
+            pst.setDate(4, transactionDate);
+            pst.executeUpdate();
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
+        }
+
+    }
+    public int getUserId(String username, Connection connection)
+    {
+        try {
+            String findUserId = "SELECT user_id FROM \"User\" WHERE username = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(findUserId);
+            preparedStatement.setString(1, username);
+
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("user_id");
             }
+            return 0;
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
         }
-        if (found) {
-            System.out.println("Enter the choice of book to borrow:");
-            int bookChoice = input.read();
-            studentObj.borrowedBooks.add(borrowBooksSearchResults.get(bookChoice - 1));
-            studentObj.displayBorrowedBooks();
-        }
-        borrowBooksSearchResults.clear();
-        if (!found) {
-            System.out.println("Book not found.");
-        }
+        return 0;
     }
 }
