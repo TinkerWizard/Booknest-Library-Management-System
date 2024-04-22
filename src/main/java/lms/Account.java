@@ -4,14 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
 public class Account {
     public String starter(Connection connection) {
-        try
-        {
+        try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             String username = "";
             System.out.println("1. Sign Up");
@@ -20,8 +20,8 @@ public class Account {
             String choiceStr = reader.readLine();
             int choice = Integer.parseInt(choiceStr);
             if (choice == 1) {
-                username = signUp();
-    
+                username = signUp(connection);
+
             } else if (choice == 2) {
                 // show options
                 username = signIn(connection);
@@ -29,23 +29,58 @@ public class Account {
                 System.out.println("Exiting...!");
             }
             return username;
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             System.out.println("An error occurred while reading input: " + e.getMessage());
             return "";
         }
     }
 
-    public static String signUp() {
+    public static String signUp(Connection con) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
         try {
-            String username = reader.readLine();
+            boolean usernameAvailable = false;
+            String username = "";
+            do {
+                Statement st = con.createStatement();
+                System.out.println("Enter username:");
+                username = reader.readLine();
+                String query = "SELECT username FROM \"User\" WHERE username = '" + username + "'";
+                ResultSet rs = st.executeQuery(query);
+                if (!rs.next()) {
+                    System.out.println("Username Available");
+                    usernameAvailable = true;
+                } else {
+                    System.out.println("Try another username");
+                }
+            } while (usernameAvailable == false);
+            System.out.println("Enter password:");
             String password = reader.readLine();
-            String user_type = "";
+            String user_type = "Librarian";
+            System.out.println("Enter Name:");
             String name = reader.readLine();
-            String email = reader.readLine();
+            boolean emailAvailable = false;
+            String email = "";
+            do {
+                Statement st = con.createStatement();
+                System.out.println("Enter email:");
+                email = reader.readLine();
+                String query = "SELECT email FROM \"User\" WHERE email = '" + email + "'";
+                ResultSet rs = st.executeQuery(query);
+                if (!rs.next()) {
+                    System.out.println("Email Available");
+                    emailAvailable = true;
+                } else {
+                    System.out.println("Try another email");
+                }
+            } while (emailAvailable == false);
+            String query = "INSERT INTO \"User\" (username, password, user_type, name, email) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setString(1, username);
+            pst.setString(2, password);
+            pst.setString(3, user_type);
+            pst.setString(4, name);
+            pst.setString(5, email);
+            pst.executeUpdate();
             return username;
         } catch (Exception e) {
             System.out.println("An error occurred while reading input: " + e.getMessage());
@@ -53,7 +88,7 @@ public class Account {
         }
     }
 
-    public static String signIn( Connection connection ) {
+    public static String signIn(Connection connection) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         try {
             System.out.println("Enter username:");
@@ -63,13 +98,13 @@ public class Account {
             try {
                 // Construct the SQL query with a prepared statement
                 String query = "SELECT * FROM \"User\" WHERE username = ?";
-    
+
                 PreparedStatement pstmt = connection.prepareStatement(query);
                 pstmt.setString(1, username);
-    
+
                 // Execute the query
                 ResultSet rs = pstmt.executeQuery();
-    
+
                 if (rs.next()) {
                     // User found, now check the password
                     String storedPassword = rs.getString("password");
