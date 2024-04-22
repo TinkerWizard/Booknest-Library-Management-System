@@ -95,7 +95,7 @@ public class LMS {
                             libraryDatabase.borrowBooks(borrowKeyword, con, currentUsername);
                             break;
                         case 2:
-                            System.out.println("Enter the book id to return");
+                            libraryDatabase.returnBooks(con, currentUsername);
                             break;
                         case 6:
                             System.out.println("Exiting...");

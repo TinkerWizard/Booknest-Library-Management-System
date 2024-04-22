@@ -10,9 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class LibraryDatabase {
@@ -123,9 +120,8 @@ public class LibraryDatabase {
         int bookId = Integer.parseInt(bookIdString);
         // System.out.println("The username");
         int user_id = getUserId(username, connection);// dummy initial value
-        
+
         String transactionType = "Borrow";
-        // feteching the current and date. Then converting it to a string
         Date transactionDate = new Date(System.currentTimeMillis());
         String updateQuery = "INSERT INTO \"transaction\" (book_id, user_id, transaction_type, transaction_date) VALUES (?, ?, ?, ?)";
         try {
@@ -136,13 +132,48 @@ public class LibraryDatabase {
             pst.setDate(4, transactionDate);
             pst.executeUpdate();
         } catch (Exception e) {
-            // TODO: handle exception
             e.printStackTrace();
         }
 
     }
-    public int getUserId(String username, Connection connection)
-    {
+
+    public void returnBooks(Connection connection, String username) {
+        int user_id = getUserId(username, connection);
+        // display the books borrowed by the user_id
+        String query = "SELECT * FROM \"transaction\" WHERE transaction_type = 'Borrow' AND user_id = ?";
+        try {
+            PreparedStatement pst = connection.prepareStatement(query);
+            pst.setInt(1, user_id);
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                int book_id = rs.getInt("book_id");
+                String bookName = getBookName(connection, book_id);
+                System.out.println("Title: " + bookName);
+                System.out.println("Book id: " + book_id);
+                System.out.println();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            System.out.println("Select the book id of the book you would like to return:");
+            String returnBookIdStr = input.readLine();
+            int returnBookId = Integer.parseInt(returnBookIdStr);
+            String transactionType = "Return";
+            Date transactionDate = new Date(System.currentTimeMillis());
+            String updateQuery = "INSERT INTO \"transaction\" (book_id, user_id, transaction_type, transaction_date) VALUES (?, ?, ?, ?)";
+            PreparedStatement pst = connection.prepareStatement(updateQuery);
+            pst.setInt(1, returnBookId);
+            pst.setInt(2, user_id);
+            pst.setString(3, transactionType);
+            pst.setDate(4, transactionDate);
+            pst.executeUpdate();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+    }
+
+    public int getUserId(String username, Connection connection) {
         try {
             String findUserId = "SELECT user_id FROM \"User\" WHERE username = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(findUserId);
@@ -158,5 +189,20 @@ public class LibraryDatabase {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public String getBookName(Connection connection, int book_id) {
+        try {
+            String findBookTitle = "SELECT * FROM \"book\" WHERE book_id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(findBookTitle);
+            preparedStatement.setInt(1, book_id);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                return rs.getString("title");
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        return "";
     }
 }
