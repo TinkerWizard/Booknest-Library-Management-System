@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,34 +21,46 @@ public class LibraryDatabase {
         input=new BufferedReader(new InputStreamReader(System.in));
     }
 
-    public void addBook(Statement statement) throws IOException {
+    public void addBook(Connection connection, Statement statement) throws IOException {
         try {
             System.out.println("Enter the book details:");
             System.out.print("Title: ");
             String title = input.readLine();
-            System.out.print("Author: ");
+            System.out.print("Author(s): ");
             String author = input.readLine();
-            System.out.print("ISBN: ");
-            String isbn = input.readLine();
+            String[] authors = author.split(",");
+            boolean uniqueISBN = false;
+            String isbn = "";
+            do {
+                System.out.print("ISBN: ");
+                isbn = input.readLine();
+                String query = "SELECT title from \"book\" where isbn = '" + isbn + "'";
+                statement = connection.createStatement();
+                ResultSet rs = statement.executeQuery(query);
+                if (rs.next()) {
+                    System.out.println("Book with the entered ISBN already exists in the database");
+                    System.out.println("Book title" + rs.getString("title"));
+                }
+                else
+                {
+                    uniqueISBN = true;
+                }
+            } while (uniqueISBN == false);
             System.out.print("Year: ");
-            int year = Integer.parseInt(input.readLine());
-
-            String query = "INSERT INTO book(title, author, isbn, year) VALUES (" +
-                    title + ", " + author + ", " + isbn + ", " + year + ")";
-
+            String yearStr = input.readLine();
+            int year = Integer.parseInt(yearStr);
+            String query = "INSERT INTO book(title, author, isbn, year) VALUES (?, ?, ?, ?)";
+            PreparedStatement pst = connection.prepareStatement(query);
             // Execute the query
-            statement.executeUpdate(query);
-
+            pst.setString(1, title);
+            Array authorArray = connection.createArrayOf("VARCHAR", authors);
+            pst.setArray(2, authorArray);
+            pst.setString(3, isbn);
+            pst.setInt(4, year);
+            pst.executeUpdate();
             System.out.println("Book added");
         } catch (SQLException e) {
             System.out.println("Error occurred while adding the book: " + e.getMessage());
-        } finally {
-            // Close the BufferedReader
-            try {
-                input.close();
-            } catch (IOException e) {
-                System.out.println("Error occurred while closing the input stream: " + e.getMessage());
-            }
         }
     }
 

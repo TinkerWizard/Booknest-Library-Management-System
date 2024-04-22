@@ -91,38 +91,53 @@ public class Account {
     public static String signIn(Connection connection) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         try {
-            System.out.println("Enter username:");
-            String username = reader.readLine();
-            System.out.println("Enter password:");
-            String password = reader.readLine();
-            try {
-                // Construct the SQL query with a prepared statement
-                String query = "SELECT * FROM \"User\" WHERE username = ?";
-
-                PreparedStatement pstmt = connection.prepareStatement(query);
-                pstmt.setString(1, username);
-
-                // Execute the query
-                ResultSet rs = pstmt.executeQuery();
-
+            String username = "";
+            boolean isUsernameFound = false;
+            do {
+                System.out.println("Enter username:");
+                username = reader.readLine();
+                String query = "SELECT username FROM \"User\" WHERE username = '" + username + "'";
+                Statement st = connection.createStatement();
+                ResultSet rs = st.executeQuery(query);
                 if (rs.next()) {
-                    // User found, now check the password
-                    String storedPassword = rs.getString("password");
-                    if (password.equals(storedPassword)) {
-                        // Passwords match, user authenticated
-                        System.out.println("User authenticated!");
-                        return username;
-                    } else {
-                        // Passwords don't match
-                        System.out.println("Incorrect password!");
-                    }
+                    isUsernameFound = true;
                 } else {
-                    // User not found
-                    System.out.println("User not found!");
+                    System.out.println("Username doesn\'t exist!");
                 }
-                // Close the result set and prepared statement
-                rs.close();
-                pstmt.close();
+            } while (isUsernameFound == false);
+            try {
+                String password = "";
+                boolean doesPasswordMatch = false;
+                do {
+                    System.out.println("Enter password:");
+                    password = reader.readLine();
+                    String query = "SELECT * FROM \"User\" WHERE username = ?";
+                    PreparedStatement pstmt = connection.prepareStatement(query);
+                    pstmt.setString(1, username);
+                    ResultSet rs = pstmt.executeQuery();
+    
+                    if (rs.next()) {
+                        // User found, now check the password
+                        String storedPassword = rs.getString("password");
+                        if (password.equals(storedPassword)) {
+                            // Passwords match, user authenticated
+                            System.out.println("User authenticated!");
+                            doesPasswordMatch = true;
+                            return username;
+                        } else {
+                            // Passwords don't match
+                            System.out.println("Incorrect password!");
+                        }
+                    } else {
+                        // User not found
+                        System.out.println("User not found!");
+                    }
+                    // Close the result set and prepared statement
+                    rs.close();
+                    pstmt.close();
+                } while (doesPasswordMatch == false);
+                // Construct the SQL query with a prepared statement
+                // Execute the query
                 return "";
             } catch (SQLException e) {
                 // Handle any SQL errors

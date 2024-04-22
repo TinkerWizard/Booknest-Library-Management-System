@@ -1,12 +1,13 @@
 package lms;
 
 import java.sql.Statement;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Scanner;
 
 public class LMS {
 
@@ -14,6 +15,9 @@ public class LMS {
         String dbUrl = "jdbc:postgresql://localhost:5432/booknest_db";
         String username = "postgres";
         String password = "april1";
+        // Scanner scanner = new Scanner(System.in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        ;
         try {
             Connection con = DriverManager.getConnection(dbUrl, username, password);
             if (con != null) {
@@ -23,10 +27,9 @@ public class LMS {
             LibraryDatabase libraryDatabase = new LibraryDatabase();
             Librarian librarian = new Librarian();
             Account account = new Account();
-            Scanner scanner = new Scanner(System.in);
             String currentUsername = account.starter(con);
             System.out.println("The current username is: " + currentUsername);
-            String query = "SELECT user_type FROM \"User\" WHERE username = '" + currentUsername +"'";
+            String query = "SELECT user_type FROM \"User\" WHERE username = '" + currentUsername + "'";
             st.executeQuery(query);
             ResultSet rs = st.executeQuery(query);
 
@@ -46,8 +49,9 @@ public class LMS {
                     System.out.println("5. Display transactions");
                     System.out.println("6. Exit");
                     System.out.print("Enter your choice: ");
-                    choice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline character
+                    String choiceStr = reader.readLine();
+                    // reader.readLine(); // Consume newline character
+                    choice = Integer.parseInt(choiceStr);
                     switch (choice) {
                         case 1:
                             System.out.println("\nAll Books:");
@@ -55,12 +59,12 @@ public class LMS {
                             break;
                         case 2:
                             System.out.print("Enter title or author to search: ");
-                            String keyword = scanner.nextLine();
+                            String keyword = reader.readLine();
                             System.out.println("\nSearch Results:");
                             libraryDatabase.searchBook(keyword, con);
                             break;
                         case 3:
-                            libraryDatabase.addBook(st);
+                            libraryDatabase.addBook(con, st);
                             break;
                         case 4:
                             librarian.displayStudents(con, st);
@@ -73,19 +77,19 @@ public class LMS {
                             break;
                         default:
                             System.out.println("Invalid choice. Please try again.");
-
                     }
-                } if (userType.equals("Student")) {
+                }
+                if (userType.equals("Student")) {
                     System.out.println("\nLibrary Management System");
                     System.out.println("1. Borrow a book");
                     System.out.println("2. Return a book");
                     System.out.println("6. Exit");
-                    choice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline character
+                    choice = reader.read();
+                    reader.readLine(); // Consume newline character
                     switch (choice) {
                         case 1:
                             System.out.print("Enter title or author to borrow: ");
-                            String borrowKeyword = scanner.nextLine();
+                            String borrowKeyword = reader.readLine();
                             libraryDatabase.borrowBooks(borrowKeyword);
                             break;
                         case 2:
@@ -99,8 +103,7 @@ public class LMS {
                     }
                 }
             } while (choice != 6);
-            scanner.close();
-            con.close();
+            // con.close();
         } catch (SQLException e) {
             System.out.println(e);
         }
