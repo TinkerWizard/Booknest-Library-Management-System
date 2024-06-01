@@ -10,57 +10,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 
 public class LibraryDatabase {
     private BufferedReader input;
-    private ArrayList<Book> books;
     Student studentObj = new Student();
 
     public LibraryDatabase() {
         // this.books = new ArrayList<>();
         input = new BufferedReader(new InputStreamReader(System.in));
-    }
-
-    public void addBook(Connection connection, Statement statement) throws IOException {
-        try {
-            System.out.println("Enter the book details:");
-            System.out.print("Title: ");
-            String title = input.readLine();
-            System.out.print("Author(s): ");
-            String author = input.readLine();
-            String[] authors = author.split(",");
-            boolean uniqueISBN = false;
-            String isbn = "";
-            do {
-                System.out.print("ISBN: ");
-                isbn = input.readLine();
-                String query = "SELECT title from \"book\" where isbn = '" + isbn + "'";
-                statement = connection.createStatement();
-                ResultSet rs = statement.executeQuery(query);
-                if (rs.next()) {
-                    System.out.println("Book with the entered ISBN already exists in the database");
-                    System.out.println("Book title" + rs.getString("title"));
-                } else {
-                    uniqueISBN = true;
-                }
-            } while (uniqueISBN == false);
-            System.out.print("Year: ");
-            String yearStr = input.readLine();
-            int year = Integer.parseInt(yearStr);
-            String query = "INSERT INTO book(title, author, isbn, year) VALUES (?, ?, ?, ?)";
-            PreparedStatement pst = connection.prepareStatement(query);
-            // Execute the query
-            pst.setString(1, title);
-            Array authorArray = connection.createArrayOf("VARCHAR", authors);
-            pst.setArray(2, authorArray);
-            pst.setString(3, isbn);
-            pst.setInt(4, year);
-            pst.executeUpdate();
-            System.out.println("Book added");
-        } catch (SQLException e) {
-            System.out.println("Error occurred while adding the book: " + e.getMessage());
-        }
     }
 
     public void displayBooks(Connection connection) {
@@ -169,7 +126,7 @@ public class LibraryDatabase {
             pst.setDate(4, transactionDate);
             pst.executeUpdate();
         } catch (Exception e) {
-            // TODO: handle exception
+            e.printStackTrace();
         }
     }
 
@@ -185,7 +142,6 @@ public class LibraryDatabase {
             }
             return 0;
         } catch (Exception e) {
-            // TODO: handle exception
             e.printStackTrace();
         }
         return 0;
@@ -201,7 +157,7 @@ public class LibraryDatabase {
                 return rs.getString("title");
             }
         } catch (Exception e) {
-            // TODO: handle exception
+            e.printStackTrace();
         }
         return "";
     }

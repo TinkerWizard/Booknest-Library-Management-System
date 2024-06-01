@@ -48,7 +48,8 @@ public class LMS {
                     System.out.println("3. Add a book");
                     System.out.println("4. Display students");
                     System.out.println("5. Display transactions");
-                    System.out.println("6. Exit");
+                    System.out.println("6. Add Student");
+                    System.out.println("7. Exit");
                     System.out.print("Enter your choice: ");
                     String choiceStr = reader.readLine();
                     // reader.readLine(); // Consume newline character
@@ -65,7 +66,7 @@ public class LMS {
                             libraryDatabase.searchBook(keyword, con);
                             break;
                         case 3:
-                            libraryDatabase.addBook(con, st);
+                            librarian.addBook(con, st);
                             break;
                         case 4:
                             librarian.displayStudents(con, st);
@@ -74,6 +75,8 @@ public class LMS {
                             librarian.displayTransaction(con, st);
                             break;
                         case 6:
+                            //add student
+                        case 7:
                             System.out.println("Exiting...");
                             break;
                         default:
@@ -97,14 +100,14 @@ public class LMS {
                         case 2:
                             libraryDatabase.returnBooks(con, currentUsername);
                             break;
-                        case 6:
+                        case 7:
                             System.out.println("Exiting...");
                             break;
                         default:
                             System.out.println("Invalid choice. Please try again.");
                     }
                 }
-            } while (choice != 6);
+            } while (choice != 7);
             // con.close();
         } catch (SQLException e) {
             System.out.println(e);
